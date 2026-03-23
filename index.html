@@ -57,7 +57,16 @@
         const data = await response.json()
 
         const games = data.response.games
-        console.log(games)
+        games.forEach(function(game) {
+          const card= document.createElement('div')
+          card.className='game-card'
+          card.innerHTML=`
+          <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appid}/header.jpg">
+          <p> ${game.name}</p>
+          <p> ${Math.round(game.playtime_forever / 60)} hrs </p>
+          `
+          library.appendChild(card)
+        })
       }
       loadLibrary()
     </script> 
