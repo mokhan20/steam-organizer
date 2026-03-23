@@ -57,15 +57,33 @@
         const data = await response.json()
 
         const games = data.response.games
+        games.sort(function(a,b){
+          if (a.rtime_last_played === 0 ) return 1 // In JS if positive that means B goes ontop
+          if (b.rtime_last_played === 0 ) return -1
+          return b.rtime_last_played - a.rtime_last_played
+        }
+        )
         games.forEach(function(game) {
           const card= document.createElement('div')
           card.className='game-card'
+          if (game.rtime_last_played===0 || game.playtime_forever===0){
+            card.style.opacity= '0.4'
+          }
           card.innerHTML=`
           <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appid}/header.jpg">
           <p> ${game.name}</p>
           <p> ${Math.round(game.playtime_forever / 60)} hrs </p>
           `
           library.appendChild(card)
+          card.addEventListener('click',function(){
+            const click=document.getElementById("detail-panel")
+            click.innerHTML=`
+            <h1> ${game.name}</h>
+            <p> ${Math.round(game.playtime_forever / 60)} hrs </p>
+            <p>Last played: ${new Date(game.rtime_last_played * 1000).toLocaleDateString()}</p>
+
+              `
+          })
         })
       }
       loadLibrary()
