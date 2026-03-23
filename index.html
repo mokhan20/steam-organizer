@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        background-color: #1a1a2e;
+        color: white;
+        font-family: sans-serif;
+      }
+      .game-card {
+        background-color: #2a2a4a;
+        padding: 16px;
+        width: 200px;
+        border-radius: 8px;
+        margin: 6px;
+      }
+      .game-card img {
+        width: 100%;
+        border-radius: 4px;
+      }
+      #library {
+        display: flex;
+        flex-wrap: wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>My Steam Library</h1>
+    <p>Games will go here.</p>
+    <div id="library"></div>
+    <script>
+      const games = [
+        {
+          name: "Game 1",
+          year: 2020,
+          developer: "Dev1",
+          score: 90,
+          appId: 570940,
+        },
+        {
+          name: "Game 2",
+          year: 2021,
+          developer: "Dev2",
+          score: 91,
+          appId: 1245620,
+        },
+        {
+          name: "Game 3",
+          year: 2022,
+          developer: "Dev3",
+          score: 92,
+          appId: 413150,
+        },
+      ];
+      const library = document.getElementById("library");
+
+      games.forEach(function (game) {
+        const card = document.createElement("div");
+        card.className = "game-card";
+        card.innerHTML = `
+        <p>${game.name}</p>
+        <p>${game.year}</p>
+        <p>${game.developer}</p>
+        <p>${game.score}</p>
+        <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appId}/header.jpg">
+
+`;
+        library.appendChild(card);
+      });
+    </script>
+  </body>
+</html>
