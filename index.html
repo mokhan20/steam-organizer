@@ -59,7 +59,7 @@
     <div id="filters">
       <input type="range" id="min-hours" min="0" max="1000" value="0" />
       <p>Min hours: <span id="hours-label">0</span></p>
-        </div>
+    </div>
     <div id="container">
       <div id="library"></div>
       <div id="detail-panel">
@@ -92,6 +92,10 @@
         const data = await response.json();
 
         const games = data.response.games;
+        const maxHours = Math.max(
+          ...games.map((game) => Math.round(game.playtime_forever / 60)),
+        );
+        slider.max = maxHours;
         games.sort(function (a, b) {
           if (a.rtime_last_played === 0) return 1; // In JS if positive that means B goes ontop
           if (b.rtime_last_played === 0) return -1;
