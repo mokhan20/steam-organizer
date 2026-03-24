@@ -56,9 +56,47 @@
   <body>
     <h1>My Steam Library</h1>
     <p>Games will go here.</p>
-    <div id="filters">
-      <input type="range" id="min-hours" min="0" max="1000" value="0" />
-      <p>Min hours: <span id="hours-label">0</span></p>
+    <div id="filter-bar">
+      <button id="filter-toggle">⚙ Filters</button>
+      <div id="filter-panel" style="display: none">
+        <div class="filter-section">
+          <label>Min hours played</label>
+          <input type="range" id="min-hours" min="0" max="1000" value="0" />
+          <span id="hours-label">0</span> hrs
+        </div>
+        <div class="filter-section">
+          <label>Last played</label>
+          <select id="last-played">
+            <option value="0">All time</option>
+            <option value="1">Last 24 hours</option>
+            <option value="7">Last week</option>
+            <option value="30">Last month</option>
+            <option value="365">Last year</option>
+          </select>
+        </div>
+        <div class="filter-section">
+          <label>Review score</label>
+          <div id="review-filters">
+            <label
+              ><input type="checkbox" value="Overwhelmingly Positive" checked />
+              Overwhelmingly Positive</label
+            >
+            <label
+              ><input type="checkbox" value="Very Positive" checked /> Very
+              Positive</label
+            >
+            <label
+              ><input type="checkbox" value="Positive" checked />
+              Positive</label
+            >
+            <label><input type="checkbox" value="Mixed" checked /> Mixed</label>
+            <label
+              ><input type="checkbox" value="Negative" checked />
+              Negative</label
+            >
+          </div>
+        </div>
+      </div>
     </div>
     <div id="container">
       <div id="library"></div>
@@ -71,14 +109,45 @@
 
       const slider = document.getElementById("min-hours");
       const hoursLabel = document.getElementById("hours-label");
+      const filterToggle = document.getElementById("filter-toggle");
+      const filterPanel = document.getElementById("filter-panel");
 
+      // Toggle filter panel
+      filterToggle.addEventListener("click", function () {
+        if (filterPanel.style.display === "none") {
+          filterPanel.style.display = "block";
+        } else {
+          filterPanel.style.display = "none";
+        }
+      });
+
+      // Hours slider
       slider.addEventListener("input", function () {
         hoursLabel.textContent = slider.value;
         const minHours = slider.value;
-
         const cards = document.querySelectorAll(".game-card");
         cards.forEach(function (card) {
           if (Number(card.dataset.hours) < Number(minHours)) {
+            card.style.display = "none";
+          } else {
+            card.style.display = "";
+          }
+        });
+      });
+      const lastPlayedSelect = document.getElementById("last-played");
+
+      lastPlayedSelect.addEventListener("change", function () {
+        const days = Number(lastPlayedSelect.value);
+        const now = Math.floor(Date.now() / 1000); // current time in Unix seconds
+        const cutoff = now - days * 24 * 60 * 60; // X days ago in Unix seconds
+
+        const cards = document.querySelectorAll(".game-card");
+        cards.forEach(function (card) {
+          if (days === 0) {
+            card.style.display = ""; // 0 = All time, show everything
+            return;
+          }
+          if (Number(card.dataset.lastPlayed) < cutoff) {
             card.style.display = "none";
           } else {
             card.style.display = "";
@@ -96,6 +165,7 @@
           ...games.map((game) => Math.round(game.playtime_forever / 60)),
         );
         slider.max = maxHours;
+
         games.sort(function (a, b) {
           if (a.rtime_last_played === 0) return 1; // In JS if positive that means B goes ontop
           if (b.rtime_last_played === 0) return -1;
@@ -105,6 +175,8 @@
           const card = document.createElement("div");
           card.className = "game-card";
           card.dataset.hours = Math.round(game.playtime_forever / 60);
+          card.dataset.lastPlayed = game.rtime_last_played;
+
           if (game.rtime_last_played === 0 || game.playtime_forever === 0) {
             card.style.opacity = "0.4";
           }
