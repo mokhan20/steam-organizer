@@ -77,23 +77,11 @@
         <div class="filter-section">
           <label>Review score</label>
           <div id="review-filters">
-            <label
-              ><input type="checkbox" value="Overwhelmingly Positive" checked />
-              Overwhelmingly Positive</label
-            >
-            <label
-              ><input type="checkbox" value="Very Positive" checked /> Very
-              Positive</label
-            >
-            <label
-              ><input type="checkbox" value="Positive" checked />
-              Positive</label
-            >
+            <label><input type="checkbox" value="Overwhelmingly Positive" checked /> Overwhelmingly Positive</label>
+            <label><input type="checkbox" value="Very Positive" checked /> Very Positive</label>
+            <label><input type="checkbox" value="Positive" checked /> Positive</label>
             <label><input type="checkbox" value="Mixed" checked /> Mixed</label>
-            <label
-              ><input type="checkbox" value="Negative" checked />
-              Negative</label
-            >
+            <label><input type="checkbox" value="Negative" checked /> Negative</label>
           </div>
         </div>
       </div>
@@ -106,11 +94,12 @@
     </div>
     <script>
       const library = document.getElementById("library");
-
       const slider = document.getElementById("min-hours");
       const hoursLabel = document.getElementById("hours-label");
       const filterToggle = document.getElementById("filter-toggle");
       const filterPanel = document.getElementById("filter-panel");
+      const lastPlayedSelect = document.getElementById("last-played");
+      const reviewCheckboxes = document.querySelectorAll("#review-filters input");
 
       // Toggle filter panel
       filterToggle.addEventListener("click", function () {
@@ -121,38 +110,40 @@
         }
       });
 
-      // Hours slider
+      // Single function that runs ALL filters at once
+      function applyFilters() {
+        const minHours = Number(slider.value);
+        const days = Number(lastPlayedSelect.value);
+        const now = Math.floor(Date.now() / 1000);
+        const cutoff = now - days * 24 * 60 * 60;
+        const checkedScores = Array.from(reviewCheckboxes)
+          .filter((cb) => cb.checked)
+          .map((cb) => cb.value);
+
+        const cards = document.querySelectorAll(".game-card");
+        cards.forEach(function (card) {
+          const hoursOk = Number(card.dataset.hours) >= minHours;
+          const lastPlayedOk = days === 0 || Number(card.dataset.lastPlayed) >= cutoff;
+          const reviewOk = !card.dataset.reviewScore || checkedScores.includes(card.dataset.reviewScore);
+
+          if (hoursOk && lastPlayedOk && reviewOk) {
+            card.style.display = "";
+          } else {
+            card.style.display = "none";
+          }
+        });
+      }
+
+      // All filters call applyFilters
       slider.addEventListener("input", function () {
         hoursLabel.textContent = slider.value;
-        const minHours = slider.value;
-        const cards = document.querySelectorAll(".game-card");
-        cards.forEach(function (card) {
-          if (Number(card.dataset.hours) < Number(minHours)) {
-            card.style.display = "none";
-          } else {
-            card.style.display = "";
-          }
-        });
+        applyFilters();
       });
-      const lastPlayedSelect = document.getElementById("last-played");
 
-      lastPlayedSelect.addEventListener("change", function () {
-        const days = Number(lastPlayedSelect.value);
-        const now = Math.floor(Date.now() / 1000); // current time in Unix seconds
-        const cutoff = now - days * 24 * 60 * 60; // X days ago in Unix seconds
+      lastPlayedSelect.addEventListener("change", applyFilters);
 
-        const cards = document.querySelectorAll(".game-card");
-        cards.forEach(function (card) {
-          if (days === 0) {
-            card.style.display = ""; // 0 = All time, show everything
-            return;
-          }
-          if (Number(card.dataset.lastPlayed) < cutoff) {
-            card.style.display = "none";
-          } else {
-            card.style.display = "";
-          }
-        });
+      reviewCheckboxes.forEach(function (checkbox) {
+        checkbox.addEventListener("change", applyFilters);
       });
 
       async function loadLibrary() {
@@ -162,17 +153,19 @@
 
         const games = data.response.games;
         const maxHours = Math.max(
-          ...games.map((game) => Math.round(game.playtime_forever / 60)),
+          ...games.map((game) => Math.round(game.playtime_forever / 60))
         );
         slider.max = maxHours;
 
         games.sort(function (a, b) {
-          if (a.rtime_last_played === 0) return 1; // In JS if positive that means B goes ontop
+          if (a.rtime_last_played === 0) return 1;
           if (b.rtime_last_played === 0) return -1;
           return b.rtime_last_played - a.rtime_last_played;
         });
+
         games.forEach(function (game) {
           const card = document.createElement("div");
+          card.dataset.appid = game.appid;
           card.className = "game-card";
           card.dataset.hours = Math.round(game.playtime_forever / 60);
           card.dataset.lastPlayed = game.rtime_last_played;
@@ -181,22 +174,43 @@
             card.style.opacity = "0.4";
           }
           card.innerHTML = `
-          <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appid}/header.jpg">
-          <p> ${game.name}</p>
-          <p> ${Math.round(game.playtime_forever / 60)} hrs </p>
+            <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appid}/header.jpg">
+            <p>${game.name}</p>
+            <p>${Math.round(game.playtime_forever / 60)} hrs</p>
           `;
           library.appendChild(card);
           card.addEventListener("click", function () {
-            const click = document.getElementById("detail-panel");
-            click.innerHTML = `
-            <h1> ${game.name}</h1>
-            <p> ${Math.round(game.playtime_forever / 60)} hrs </p>
-            <p>Last played: ${new Date(game.rtime_last_played * 1000).toLocaleDateString()}</p>
-
-              `;
+            const panel = document.getElementById("detail-panel");
+            panel.innerHTML = `
+              <h1>${game.name}</h1>
+              <p>${Math.round(game.playtime_forever / 60)} hrs</p>
+              <p>Last played: ${new Date(game.rtime_last_played * 1000).toLocaleDateString()}</p>
+            `;
           });
         });
+
+        const reviewPromises = games.map(function (game) {
+          return fetch(
+            `https://store.steampowered.com/appreviews/${game.appid}?json=1&language=english`
+          )
+            .then((response) => response.json())
+            .then((data) => {
+              return {
+                appid: game.appid,
+                score: data.query_summary?.review_score_desc || "No reviews",
+              };
+            });
+        });
+
+        const reviews = await Promise.all(reviewPromises);
+        reviews.forEach(function (review) {
+          const card = document.querySelector(`[data-appid="${review.appid}"]`);
+          if (card) {
+            card.dataset.reviewScore = review.score;
+          }
+        });
       }
+
       loadLibrary();
     </script>
   </body>
