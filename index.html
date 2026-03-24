@@ -59,8 +59,7 @@
     <div id="filters">
       <input type="range" id="min-hours" min="0" max="1000" value="0" />
       <p>Min hours: <span id="hours-label">0</span></p>
-      <button id="apply-filters">Apply</button>
-    </div>
+        </div>
     <div id="container">
       <div id="library"></div>
       <div id="detail-panel">
@@ -75,9 +74,6 @@
 
       slider.addEventListener("input", function () {
         hoursLabel.textContent = slider.value;
-      });
-      const applyButton = document.getElementById("apply-filters");
-      applyButton.addEventListener("click", function () {
         const minHours = slider.value;
 
         const cards = document.querySelectorAll(".game-card");
