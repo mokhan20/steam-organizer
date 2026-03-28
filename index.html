@@ -6,7 +6,7 @@
     <style>
       body {
         background-color: #1a1a2e;
-        color: white;
+        color: rgb(255, 255, 255);
         font-family: sans-serif;
       }
 
@@ -77,15 +77,35 @@
         <div class="filter-section">
           <label>Review score</label>
           <div id="review-filters">
-            <label><input type="checkbox" value="Overwhelmingly Positive" checked /> Overwhelmingly Positive</label>
-            <label><input type="checkbox" value="Very Positive" checked /> Very Positive</label>
-            <label><input type="checkbox" value="Positive" checked /> Positive</label>
+            <label
+              ><input type="checkbox" value="Overwhelmingly Positive" checked />
+              Overwhelmingly Positive</label
+            >
+            <label
+              ><input type="checkbox" value="Very Positive" checked /> Very
+              Positive</label
+            >
+            <label
+              ><input type="checkbox" value="Positive" checked />
+              Positive</label
+            >
             <label><input type="checkbox" value="Mixed" checked /> Mixed</label>
-            <label><input type="checkbox" value="Negative" checked /> Negative</label>
+            <label
+              ><input type="checkbox" value="Negative" checked />
+              Negative</label
+            >
           </div>
         </div>
       </div>
     </div>
+    <div class="categoryCreate">
+      <label> Create Category</label>
+      <input type="text" id="category-input" placeholder="Category name..."/>
+      <button id="create-button" >Create</button>
+
+
+    </div>
+
     <div id="container">
       <div id="library"></div>
       <div id="detail-panel">
@@ -99,7 +119,10 @@
       const filterToggle = document.getElementById("filter-toggle");
       const filterPanel = document.getElementById("filter-panel");
       const lastPlayedSelect = document.getElementById("last-played");
-      const reviewCheckboxes = document.querySelectorAll("#review-filters input");
+      const reviewCheckboxes = document.querySelectorAll( "#review-filters input",);
+      const categoryInput=document.getElementById("category-input");
+      const createButton=document.getElementById("create-button")
+
 
       // Toggle filter panel
       filterToggle.addEventListener("click", function () {
@@ -123,8 +146,11 @@
         const cards = document.querySelectorAll(".game-card");
         cards.forEach(function (card) {
           const hoursOk = Number(card.dataset.hours) >= minHours;
-          const lastPlayedOk = days === 0 || Number(card.dataset.lastPlayed) >= cutoff;
-          const reviewOk = !card.dataset.reviewScore || checkedScores.includes(card.dataset.reviewScore);
+          const lastPlayedOk =
+            days === 0 || Number(card.dataset.lastPlayed) >= cutoff;
+          const reviewOk =
+            !card.dataset.reviewScore ||
+            checkedScores.includes(card.dataset.reviewScore);
 
           if (hoursOk && lastPlayedOk && reviewOk) {
             card.style.display = "";
@@ -153,7 +179,7 @@
 
         const games = data.response.games;
         const maxHours = Math.max(
-          ...games.map((game) => Math.round(game.playtime_forever / 60))
+          ...games.map((game) => Math.round(game.playtime_forever / 60)),
         );
         slider.max = maxHours;
 
@@ -179,19 +205,29 @@
             <p>${Math.round(game.playtime_forever / 60)} hrs</p>
           `;
           library.appendChild(card);
-          card.addEventListener("click", function () {
+          card.addEventListener("click", async function () {
             const panel = document.getElementById("detail-panel");
+            panel.innerHTML = `<p>Loading...</p>`;
+
+            const response = await fetch(
+              `https://store.steampowered.com/api/appdetails?appids=${game.appid}&l=english`,
+            );
+            const data = await response.json();
+            const details = data[game.appid].data;
+
             panel.innerHTML = `
-              <h1>${game.name}</h1>
-              <p>${Math.round(game.playtime_forever / 60)} hrs</p>
-              <p>Last played: ${new Date(game.rtime_last_played * 1000).toLocaleDateString()}</p>
-            `;
+        <h1>${game.name}</h1>
+        <p>${Math.round(game.playtime_forever / 60)} hrs</p>
+        <p>Last played: ${new Date(game.rtime_last_played * 1000).toLocaleDateString()}</p>
+        <p>${card.dataset.reviewScore || "No reviews"}</p>
+        <p>${details?.short_description || "No description available"}</p>
+    `;
           });
         });
 
         const reviewPromises = games.map(function (game) {
           return fetch(
-            `https://store.steampowered.com/appreviews/${game.appid}?json=1&language=english`
+            `https://store.steampowered.com/appreviews/${game.appid}?json=1&language=english`,
           )
             .then((response) => response.json())
             .then((data) => {
