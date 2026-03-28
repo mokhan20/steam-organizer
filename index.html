@@ -42,6 +42,8 @@
         padding: 24px;
         border-radius: 8px;
         overflow: hidden;
+        position: sticky;
+        top: 24px;
       }
       #container {
         display: flex;
@@ -123,6 +125,14 @@
       const categoryInput=document.getElementById("category-input");
       const createButton=document.getElementById("create-button")
 
+      createButton.addEventListener("click",function(){
+        const name= categoryInput.value;
+        if (name===""){
+          return;
+        }
+        categories[name]=[];
+        categoryInput.value="";
+      });
 
       // Toggle filter panel
       filterToggle.addEventListener("click", function () {
