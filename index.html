@@ -44,6 +44,7 @@
         overflow: hidden;
         position: sticky;
         top: 24px;
+        margin-top: 16px;
       }
       #container {
         display: flex;
@@ -56,8 +57,8 @@
     </style>
   </head>
   <body>
-    <h1>My Steam Library</h1>
-    <p>Games will go here.</p>
+    <h1>Your steam library!</h1>
+    <p>Games</p>
     <div id="filter-bar">
       <button id="filter-toggle">⚙ Filters</button>
       <div id="filter-panel" style="display: none">
@@ -100,18 +101,23 @@
         </div>
       </div>
     </div>
-    <div class="categoryCreate">
-      <label> Create Category</label>
-      <input type="text" id="category-input" placeholder="Category name..."/>
-      <button id="create-button" >Create</button>
-
-
-    </div>
 
     <div id="container">
       <div id="library"></div>
-      <div id="detail-panel">
-        <p>Click a game to see details!</p>
+      <div id="sidebar">
+        <div class="categoryCreate">
+          <label>Create Category</label>
+          <input
+            type="text"
+            id="category-input"
+            placeholder="Category name..."
+          />
+          <button id="create-button">Create</button>
+        </div>
+        <div id="category-list"></div>
+        <div id="detail-panel" style="display: none">
+          <p>Click a game to see details!</p>
+        </div>
       </div>
     </div>
     <script>
@@ -121,17 +127,56 @@
       const filterToggle = document.getElementById("filter-toggle");
       const filterPanel = document.getElementById("filter-panel");
       const lastPlayedSelect = document.getElementById("last-played");
-      const reviewCheckboxes = document.querySelectorAll( "#review-filters input",);
-      const categoryInput=document.getElementById("category-input");
-      const createButton=document.getElementById("create-button")
+      const reviewCheckboxes = document.querySelectorAll(
+        "#review-filters input",
+      );
+      const categoryInput = document.getElementById("category-input");
+      const createButton = document.getElementById("create-button");
+      const categories = {};
 
-      createButton.addEventListener("click",function(){
-        const name= categoryInput.value;
-        if (name===""){
+      createButton.addEventListener("click", function () {
+        const name = categoryInput.value;
+        if (name === "") {
           return;
         }
-        categories[name]=[];
-        categoryInput.value="";
+        categories[name] = [];
+        const categoryList = document.getElementById("category-list");
+        const section = document.createElement("div");
+        section.innerHTML = `
+        <button class="toggle-btn">+</button>
+        <span> ${name}</span>
+        <div class="category-games"></div>
+        `;
+        categoryList.appendChild(section);
+        const toggleBtn = section.querySelector(".toggle-btn");
+        const gamesList = section.querySelector(".category-games");
+        gamesList.style.display = "none";
+        toggleBtn.addEventListener("click", function () {
+          if (gamesList.style.display === "none") {
+            gamesList.style.display = "block";
+            toggleBtn.textContent = "-";
+          } else {
+            gamesList.style.display = "none";
+            toggleBtn.textContent = "+";
+          }
+        });
+        section.addEventListener("dragover", function (e) {
+          e.preventDefault();
+        });
+        section.addEventListener("drop", function (e) {
+          e.preventDefault();
+          const appid = e.dataTransfer.getData("text/plain");
+          categories[name].push(appid);
+          const card = document.querySelector(`[data-appid="${appid}"]`);
+          const gameName = card.querySelector("p").textContent;
+          const entry = document.createElement("div");
+          entry.innerHTML = `
+  <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/header.jpg" width="30">
+  <span>${gameName}</span>
+`;
+          gamesList.appendChild(entry);
+        });
+        categoryInput.value = "";
       });
 
       // Toggle filter panel
@@ -203,6 +248,10 @@
           const card = document.createElement("div");
           card.dataset.appid = game.appid;
           card.className = "game-card";
+          card.draggable = true;
+          card.addEventListener("dragstart", function (e) {
+            e.dataTransfer.setData("text/plain", game.appid);
+          });
           card.dataset.hours = Math.round(game.playtime_forever / 60);
           card.dataset.lastPlayed = game.rtime_last_played;
 
@@ -217,6 +266,7 @@
           library.appendChild(card);
           card.addEventListener("click", async function () {
             const panel = document.getElementById("detail-panel");
+            panel.style.display = "";
             panel.innerHTML = `<p>Loading...</p>`;
 
             const response = await fetch(
