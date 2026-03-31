@@ -9,7 +9,6 @@
         color: rgb(255, 255, 255);
         font-family: sans-serif;
       }
-
       .game-card {
         background-color: #2a2a4a;
         padding: 16px;
@@ -80,23 +79,11 @@
         <div class="filter-section">
           <label>Review score</label>
           <div id="review-filters">
-            <label
-              ><input type="checkbox" value="Overwhelmingly Positive" checked />
-              Overwhelmingly Positive</label
-            >
-            <label
-              ><input type="checkbox" value="Very Positive" checked /> Very
-              Positive</label
-            >
-            <label
-              ><input type="checkbox" value="Positive" checked />
-              Positive</label
-            >
+            <label><input type="checkbox" value="Overwhelmingly Positive" checked /> Overwhelmingly Positive</label>
+            <label><input type="checkbox" value="Very Positive" checked /> Very Positive</label>
+            <label><input type="checkbox" value="Positive" checked /> Positive</label>
             <label><input type="checkbox" value="Mixed" checked /> Mixed</label>
-            <label
-              ><input type="checkbox" value="Negative" checked />
-              Negative</label
-            >
+            <label><input type="checkbox" value="Negative" checked /> Negative</label>
           </div>
         </div>
       </div>
@@ -107,11 +94,7 @@
       <div id="sidebar">
         <div class="categoryCreate">
           <label>Create Category</label>
-          <input
-            type="text"
-            id="category-input"
-            placeholder="Category name..."
-          />
+          <input type="text" id="category-input" placeholder="Category name..." />
           <button id="create-button">Create</button>
         </div>
         <div id="category-list"></div>
@@ -120,6 +103,7 @@
         </div>
       </div>
     </div>
+
     <script>
       const library = document.getElementById("library");
       const slider = document.getElementById("min-hours");
@@ -127,30 +111,38 @@
       const filterToggle = document.getElementById("filter-toggle");
       const filterPanel = document.getElementById("filter-panel");
       const lastPlayedSelect = document.getElementById("last-played");
-      const reviewCheckboxes = document.querySelectorAll("#review-filters input",
-      );
+      const reviewCheckboxes = document.querySelectorAll("#review-filters input");
       const categoryInput = document.getElementById("category-input");
       const createButton = document.getElementById("create-button");
-      const categories = {};
-      let activeCategory= null;
+      let categories = {};
+      let activeCategory = null;
 
-      createButton.addEventListener("click", function () {
-        const name = categoryInput.value;
-        if (name === "") {
-          return;
+      function saveCategories() {
+        localStorage.setItem("vault-categories", JSON.stringify(categories));
+      }
+
+      function loadCategories() {
+        const saved = localStorage.getItem("vault-categories");
+        if (saved !== null) {
+          categories = JSON.parse(saved);
         }
-        categories[name] = [];
+      }
+
+      // Builds the UI for a category — called on create AND on load from localStorage
+      function createCategoryUI(name) {
         const categoryList = document.getElementById("category-list");
         const section = document.createElement("div");
         section.innerHTML = `
-              <button class="toggle-btn">+</button>
-              <span> ${name}</span>
-              <div class="category-games"></div>
-              `;
+          <button class="toggle-btn">+</button>
+          <span> ${name}</span>
+          <div class="category-games"></div>
+        `;
         categoryList.appendChild(section);
+
         const toggleBtn = section.querySelector(".toggle-btn");
         const gamesList = section.querySelector(".category-games");
         gamesList.style.display = "none";
+
         toggleBtn.addEventListener("click", function () {
           if (gamesList.style.display === "none") {
             gamesList.style.display = "block";
@@ -160,39 +152,60 @@
             toggleBtn.textContent = "+";
           }
         });
+
         const categoryName = section.querySelector("span");
         categoryName.addEventListener("click", function () {
-          activeCategory=name;
+          activeCategory = name;
           applyFilters();
-  
-        })
+        });
         categoryName.addEventListener("dblclick", function () {
-          activeCategory=null;
+          activeCategory = null;
           applyFilters();
-          });
+        });
 
         section.addEventListener("dragover", function (e) {
           e.preventDefault();
         });
+
         section.addEventListener("drop", function (e) {
           e.preventDefault();
           const appid = e.dataTransfer.getData("text/plain");
-          if (!categories[name].includes(appid)){
+          if (!categories[name].includes(appid)) {
             categories[name].push(appid);
-          const card = document.querySelector(`[data-appid="${appid}"]`);
-          const gameName = card.querySelector("p").textContent;
-          const entry = document.createElement("div");
-          entry.innerHTML = `
-        <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/header.jpg" width="30">
-        <span>${gameName}</span>
-      `;
-          gamesList.appendChild(entry);
-          };
+            saveCategories();
+            const card = document.querySelector(`[data-appid="${appid}"]`);
+            const gameName = card.querySelector("p").textContent;
+            const entry = document.createElement("div");
+            entry.innerHTML = `
+              <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/header.jpg" width="30">
+              <span>${gameName}</span>
+            `;
+            gamesList.appendChild(entry);
+          }
         });
+
+        // Rebuild saved game entries if loading from localStorage
+        if (categories[name] && categories[name].length > 0) {
+          categories[name].forEach(function (appid) {
+            const entry = document.createElement("div");
+            entry.innerHTML = `
+              <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/header.jpg" width="30">
+              <span>${appid}</span>
+            `;
+            gamesList.appendChild(entry);
+          });
+        }
+      }
+
+      createButton.addEventListener("click", function () {
+        const name = categoryInput.value;
+        if (name === "") return;
+        categories[name] = [];
+        saveCategories();
+        createCategoryUI(name);
         categoryInput.value = "";
       });
 
-      // Toggle filter panel
       filterToggle.addEventListener("click", function () {
         if (filterPanel.style.display === "none") {
           filterPanel.style.display = "block";
@@ -201,7 +214,6 @@
         }
       });
 
-      // Single function that runs ALL filters at once
       function applyFilters() {
         const minHours = Number(slider.value);
         const days = Number(lastPlayedSelect.value);
@@ -214,13 +226,10 @@
         const cards = document.querySelectorAll(".game-card");
         cards.forEach(function (card) {
           const hoursOk = Number(card.dataset.hours) >= minHours;
-          const lastPlayedOk =
-            days === 0 || Number(card.dataset.lastPlayed) >= cutoff;
-          const reviewOk =
-            !card.dataset.reviewScore ||
-            checkedScores.includes(card.dataset.reviewScore);
-
+          const lastPlayedOk = days === 0 || Number(card.dataset.lastPlayed) >= cutoff;
+          const reviewOk = !card.dataset.reviewScore || checkedScores.includes(card.dataset.reviewScore);
           const categoryOk = activeCategory === null || categories[activeCategory].includes(card.dataset.appid);
+
           if (hoursOk && lastPlayedOk && reviewOk && categoryOk) {
             card.style.display = "";
           } else {
@@ -229,16 +238,19 @@
         });
       }
 
-      // All filters call applyFilters
       slider.addEventListener("input", function () {
         hoursLabel.textContent = slider.value;
         applyFilters();
       });
-
       lastPlayedSelect.addEventListener("change", applyFilters);
-
       reviewCheckboxes.forEach(function (checkbox) {
         checkbox.addEventListener("change", applyFilters);
+      });
+
+      // Load saved categories and rebuild UI before loading library
+      loadCategories();
+      Object.keys(categories).forEach(function (name) {
+        createCategoryUI(name);
       });
 
       async function loadLibrary() {
@@ -247,9 +259,7 @@
         const data = await response.json();
 
         const games = data.response.games;
-        const maxHours = Math.max(
-          ...games.map((game) => Math.round(game.playtime_forever / 60)),
-        );
+        const maxHours = Math.max(...games.map((game) => Math.round(game.playtime_forever / 60)));
         slider.max = maxHours;
 
         games.sort(function (a, b) {
@@ -273,19 +283,18 @@
             card.style.opacity = "0.4";
           }
           card.innerHTML = `
-                  <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appid}/header.jpg">
-                  <p>${game.name}</p>
-                  <p>${Math.round(game.playtime_forever / 60)} hrs</p>
-                `;
+            <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appid}/header.jpg">
+            <p>${game.name}</p>
+            <p>${Math.round(game.playtime_forever / 60)} hrs</p>
+          `;
           library.appendChild(card);
+
           card.addEventListener("click", async function () {
             const panel = document.getElementById("detail-panel");
             panel.style.display = "";
             panel.innerHTML = `<p>Loading...</p>`;
 
-            const response = await fetch(
-              `https://store.steampowered.com/api/appdetails?appids=${game.appid}&l=english`,
-            );
+            const response = await fetch(`https://store.steampowered.com/api/appdetails?appids=${game.appid}&l=english`);
             const data = await response.json();
             const details = data[game.appid].data;
 
@@ -295,29 +304,23 @@
               <p>Last played: ${new Date(game.rtime_last_played * 1000).toLocaleDateString()}</p>
               <p>${card.dataset.reviewScore || "No reviews"}</p>
               <p>${details?.short_description || "No description available"}</p>
-          `;
+            `;
           });
         });
 
         const reviewPromises = games.map(function (game) {
-          return fetch(
-            `https://store.steampowered.com/appreviews/${game.appid}?json=1&language=english`,
-          )
-            .then((response) => response.json())
-            .then((data) => {
-              return {
-                appid: game.appid,
-                score: data.query_summary?.review_score_desc || "No reviews",
-              };
-            });
+          return fetch(`https://store.steampowered.com/appreviews/${game.appid}?json=1&language=english`)
+            .then((r) => r.json())
+            .then((data) => ({
+              appid: game.appid,
+              score: data.query_summary?.review_score_desc || "No reviews",
+            }));
         });
 
         const reviews = await Promise.all(reviewPromises);
         reviews.forEach(function (review) {
           const card = document.querySelector(`[data-appid="${review.appid}"]`);
-          if (card) {
-            card.dataset.reviewScore = review.score;
-          }
+          if (card) card.dataset.reviewScore = review.score;
         });
       }
 
