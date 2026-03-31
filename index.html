@@ -165,12 +165,11 @@
           activeCategory=name;
           applyFilters();
   
-        });
+        })
         categoryName.addEventListener("dblclick", function () {
           activeCategory=null;
           applyFilters();
           });
-        });
 
         section.addEventListener("dragover", function (e) {
           e.preventDefault();
@@ -178,7 +177,8 @@
         section.addEventListener("drop", function (e) {
           e.preventDefault();
           const appid = e.dataTransfer.getData("text/plain");
-          categories[name].push(appid);
+          if (!categories[name].includes(appid)){
+            categories[name].push(appid);
           const card = document.querySelector(`[data-appid="${appid}"]`);
           const gameName = card.querySelector("p").textContent;
           const entry = document.createElement("div");
@@ -187,6 +187,7 @@
         <span>${gameName}</span>
       `;
           gamesList.appendChild(entry);
+          };
         });
         categoryInput.value = "";
       });
