@@ -127,12 +127,12 @@
       const filterToggle = document.getElementById("filter-toggle");
       const filterPanel = document.getElementById("filter-panel");
       const lastPlayedSelect = document.getElementById("last-played");
-      const reviewCheckboxes = document.querySelectorAll(
-        "#review-filters input",
+      const reviewCheckboxes = document.querySelectorAll("#review-filters input",
       );
       const categoryInput = document.getElementById("category-input");
       const createButton = document.getElementById("create-button");
       const categories = {};
+      let activeCategory= null;
 
       createButton.addEventListener("click", function () {
         const name = categoryInput.value;
@@ -162,19 +162,13 @@
         });
         const categoryName = section.querySelector("span");
         categoryName.addEventListener("click", function () {
-          const cards = document.querySelectorAll(".game-card");
-          cards.forEach(function (card) {
-            if (categories[name].includes(card.dataset.appid)) {
-              card.style.display = "";
-            } else {
-              card.style.display = "none";
-            }
-          });
+          activeCategory=name;
+          applyFilters();
+  
         });
         categoryName.addEventListener("dblclick", function () {
-          const cards = document.querySelectorAll(".game-card");
-          cards.forEach(function (card) {
-            card.style.display = "";
+          activeCategory=null;
+          applyFilters();
           });
         });
 
@@ -225,7 +219,8 @@
             !card.dataset.reviewScore ||
             checkedScores.includes(card.dataset.reviewScore);
 
-          if (hoursOk && lastPlayedOk && reviewOk) {
+          const categoryOk = activeCategory === null || categories[activeCategory].includes(card.dataset.appid);
+          if (hoursOk && lastPlayedOk && reviewOk && categoryOk) {
             card.style.display = "";
           } else {
             card.style.display = "none";
