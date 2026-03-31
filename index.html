@@ -143,10 +143,10 @@
         const categoryList = document.getElementById("category-list");
         const section = document.createElement("div");
         section.innerHTML = `
-        <button class="toggle-btn">+</button>
-        <span> ${name}</span>
-        <div class="category-games"></div>
-        `;
+              <button class="toggle-btn">+</button>
+              <span> ${name}</span>
+              <div class="category-games"></div>
+              `;
         categoryList.appendChild(section);
         const toggleBtn = section.querySelector(".toggle-btn");
         const gamesList = section.querySelector(".category-games");
@@ -160,6 +160,24 @@
             toggleBtn.textContent = "+";
           }
         });
+        const categoryName = section.querySelector("span");
+        categoryName.addEventListener("click", function () {
+          const cards = document.querySelectorAll(".game-card");
+          cards.forEach(function (card) {
+            if (categories[name].includes(card.dataset.appid)) {
+              card.style.display = "";
+            } else {
+              card.style.display = "none";
+            }
+          });
+        });
+        categoryName.addEventListener("dblclick", function () {
+          const cards = document.querySelectorAll(".game-card");
+          cards.forEach(function (card) {
+            card.style.display = "";
+          });
+        });
+
         section.addEventListener("dragover", function (e) {
           e.preventDefault();
         });
@@ -171,9 +189,9 @@
           const gameName = card.querySelector("p").textContent;
           const entry = document.createElement("div");
           entry.innerHTML = `
-  <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/header.jpg" width="30">
-  <span>${gameName}</span>
-`;
+        <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/header.jpg" width="30">
+        <span>${gameName}</span>
+      `;
           gamesList.appendChild(entry);
         });
         categoryInput.value = "";
@@ -259,10 +277,10 @@
             card.style.opacity = "0.4";
           }
           card.innerHTML = `
-            <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appid}/header.jpg">
-            <p>${game.name}</p>
-            <p>${Math.round(game.playtime_forever / 60)} hrs</p>
-          `;
+                  <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appid}/header.jpg">
+                  <p>${game.name}</p>
+                  <p>${Math.round(game.playtime_forever / 60)} hrs</p>
+                `;
           library.appendChild(card);
           card.addEventListener("click", async function () {
             const panel = document.getElementById("detail-panel");
@@ -276,12 +294,12 @@
             const details = data[game.appid].data;
 
             panel.innerHTML = `
-        <h1>${game.name}</h1>
-        <p>${Math.round(game.playtime_forever / 60)} hrs</p>
-        <p>Last played: ${new Date(game.rtime_last_played * 1000).toLocaleDateString()}</p>
-        <p>${card.dataset.reviewScore || "No reviews"}</p>
-        <p>${details?.short_description || "No description available"}</p>
-    `;
+              <h1>${game.name}</h1>
+              <p>${Math.round(game.playtime_forever / 60)} hrs</p>
+              <p>Last played: ${new Date(game.rtime_last_played * 1000).toLocaleDateString()}</p>
+              <p>${card.dataset.reviewScore || "No reviews"}</p>
+              <p>${details?.short_description || "No description available"}</p>
+          `;
           });
         });
 
