@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <script src="../config.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div id="header">
+      <h1>Organizer v9000</h1>
+      <p>Your Steam Library</p>
+    </div>
+
+    <div id="filter-bar">
+      <button id="filter-toggle">⚙ &nbsp;Filters</button>
+      <div id="filter-panel" style="display: none">
+        <div class="filter-section">
+          <label>Min hours played</label>
+          <input type="range" id="min-hours" min="0" max="1000" value="0" />
+          <span id="hours-label">0</span> hrs
+        </div>
+        <div class="filter-section">
+          <label>Last played</label>
+          <select id="last-played">
+            <option value="0">All time</option>
+            <option value="1">Last 24 hours</option>
+            <option value="7">Last week</option>
+            <option value="30">Last month</option>
+            <option value="365">Last year</option>
+          </select>
+        </div>
+        <div class="filter-section">
+          <label>Review score</label>
+          <div id="review-filters">
+            <label><input type="checkbox" value="Overwhelmingly Positive" checked /> Overwhelmingly Positive</label>
+            <label><input type="checkbox" value="Very Positive" checked /> Very Positive</label>
+            <label><input type="checkbox" value="Positive" checked /> Positive</label>
+            <label><input type="checkbox" value="Mixed" checked /> Mixed</label>
+            <label><input type="checkbox" value="Negative" checked /> Negative</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="container">
+      <div id="library"></div>
+      <div id="sidebar">
+        <div class="categoryCreate">
+          <label>Forge a Category</label>
+          <input type="text" id="category-input" placeholder="Name thy category..." />
+          <button id="create-button">+ Inscribe</button>
+        </div>
+        <div id="category-list"></div>
+        <div id="detail-panel" style="display: none">
+          <p>Select a tome to inspect...</p>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
