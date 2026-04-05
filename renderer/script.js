@@ -91,7 +91,9 @@ function createCategoryUI(name) {
       const gameName = card ? card.querySelector("p").textContent : appid;
       const entry = document.createElement("div");
       entry.innerHTML = `
-              <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/header.jpg" width="28">
+             // <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/header.jpg" width="28">
+             <img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${appid}/7af754cc405af7db9396a0c1bedff8e7fd213198/header.jpg?t=1773940368" width="28">
+// parse https://store.steampowered.com/api/appdetails?appids=3373660&l=english"
               <span>${gameName}</span>
             `;
       gamesList.appendChild(entry);
@@ -187,6 +189,7 @@ async function loadLibrary() {
       card.style.opacity = "0.35";
     card.innerHTML = `
             <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appid}/header.jpg">
+            onerror 
             <p>${game.name}</p>
             <p>${Math.round(game.playtime_forever / 60)} hrs</p>
           `;
