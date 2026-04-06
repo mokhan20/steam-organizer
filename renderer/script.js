@@ -92,7 +92,7 @@ function createCategoryUI(name) {
     e.preventDefault();
     section.classList.remove("drag-over");
     const appid = e.dataTransfer.getData("text/plain");
-    if (!categories[name].includes(appid)) {
+    if (!categories[name].map(String).includes(appid)) {
       categories[name].push(appid);
       saveCategories();
       const card = document.querySelector(`[data-appid="${appid}"]`);
@@ -183,7 +183,7 @@ const games = await window.steamAPI.getOwnedGames();
     card.dataset.appid = game.appid;
     card.className = "game-card";
     card.draggable = true;
-    card.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", game.appid));
+    card.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", String(game.appid)));
     card.dataset.hours = Math.round(game.playtime_forever / 60);
     card.dataset.lastPlayed = game.rtime_last_played;
     if (game.rtime_last_played === 0 || game.playtime_forever === 0) card.style.opacity = "0.35";
